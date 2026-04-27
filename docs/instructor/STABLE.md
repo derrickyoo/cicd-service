@@ -54,7 +54,7 @@ The starting point is the POC end-state: `.github/workflows/deploy.yml` has a `b
        - name: Setup Node
          uses: actions/setup-node@v4
          with:
-           node-version: lts/*
+           node-version: 22.22
 +          cache: 'npm'
        - name: Install
          run: npm ci
@@ -83,7 +83,7 @@ Name the trade-off out loud: `setup-node`'s `cache: 'npm'` is the right default 
        - name: Setup Node
          uses: actions/setup-node@v4
          with:
-           node-version: lts/*
+           node-version: 22.22
 -          cache: 'npm'
 +          cache: 'nmp'
 ```
@@ -99,7 +99,7 @@ Watch CI. The setup-node step fails with an error along the lines of `Caching fo
        - name: Setup Node
          uses: actions/setup-node@v4
          with:
-           node-version: lts/*
+           node-version: 22.22
 -          cache: 'nmp'
 +          cache: 'npm'
 ```
@@ -150,9 +150,9 @@ description: Checkout, install dependencies with npm cache, build the Astro stat
 
 inputs:
   node-version:
-    description: Node.js version (or setup-node alias such as `lts/*`) to use for the build.
+    description: Node.js version (e.g. `22.22`) to use for the build.
     required: false
-    default: 'lts/*'
+    default: '22.22'
   artifact-name:
     description: Name to give the uploaded build artifact.
     required: false
@@ -203,7 +203,7 @@ Walk the file. Three callouts to make:
 -      - name: Setup Node
 -        uses: actions/setup-node@v4
 -        with:
--          node-version: lts/*
+-          node-version: 22.22
 -          cache: 'npm'
 -      - name: Install
 -        run: npm ci
@@ -267,9 +267,9 @@ on:
   workflow_call:
     inputs:
       node-version:
-        description: Node.js version (or setup-node alias such as `lts/*`) to use for the build.
+        description: Node.js version (e.g. `22.22`) to use for the build.
         required: false
-        default: 'lts/*'
+        default: '22.22'
         type: string
       artifact-name:
         description: Name of the uploaded artifact.

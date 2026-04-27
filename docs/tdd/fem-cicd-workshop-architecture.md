@@ -32,6 +32,10 @@ This TDD does NOT produce the instructor guide itself. It locks the **technical 
 - **Sample app stays trivial.** A single Astro page rendering "Hello, world" — zero routing, zero data, zero JS interactivity beyond what Astro emits for a static page. Any deviation is scope creep.
 - **Bound to FEM's existing 16-segment agenda.** The instructor docs follow FEM's published time blocks; the three-stage progression must overlay this agenda, not replace it.
 - **Live-teachable in real time.** Every "Live build" step must be demonstrable on stage in the segment's allotted minutes. If a step requires more than ~5 minutes of typing or waiting, it must be split, pre-staged, or moved.
+- **Workshop reference repository is PUBLIC on GitHub Free plan.** The instructor's pre-staged repo and any student follow-along repos must be public. This constrains which GitHub features the workshop can *require* end-to-end:
+  - **Free on public repos (workshop may require):** GitHub Environments with Required Reviewers and Wait Timers, branch protection rules with required status checks, self-hosted runners (free on any plan, public or private).
+  - **Paid-only on private repos:** the same Environments / Required Reviewers / Wait Timers features require Pro+/Team/Enterprise on private repos. The workshop may *mention* this ("on a paid plan you'd also get X on private repos") but must not require a paid plan to complete any Live build.
+  - **Implication for §5.3 Enterprise stage:** the segment 12 environment-gate demo and the segment 14/15 hardening demos all run on Free + public, which is why the stage is teachable end-to-end without billing setup.
 
 ### Acceptance criteria for the workshop deliverable (not this TDD)
 
@@ -122,6 +126,7 @@ The sample app is a single-page Astro site emitting "Hello, world" with TypeScri
 ```
 fem-cicd-sample-app/
 ├── package.json
+├── package-lock.json
 ├── tsconfig.json
 ├── astro.config.mjs
 ├── .gitignore
@@ -130,6 +135,8 @@ fem-cicd-sample-app/
     └── pages/
         └── index.astro
 ```
+
+`package-lock.json` is committed alongside `package.json`. The lockfile is required by `npm ci` (used in workflows from segment 5 onward) and by `actions/setup-node`'s `cache: 'npm'` keying. Without a committed lockfile, segment 5's first build fails immediately.
 
 ### 4.2. `package.json` — required fields
 
@@ -142,6 +149,7 @@ fem-cicd-sample-app/
   - `preview`: `"astro preview"`
 - `dependencies`: `astro` (latest stable major), `typescript` (peer of Astro's recommendation)
 - `devDependencies`: none beyond what `astro add typescript` produces
+- `engines.node`: `">=22.22.0"` — pinned to a specific minor so local installs match the CI runner. Workflow `setup-node` `node-version` mirrors this as `22.22` (see §11.2 Q5).
 - No lint, no test framework, no Prettier — these would distract from CI/CD. The CI pipeline tests only `npm run build`.
 
 > **Instructor note:** When students ask "where are the tests?", the answer is "the build itself is the test for a static site — if the TypeScript compiles and Astro produces a `dist/`, the pipeline is green." This is intentional: the workshop teaches CI/CD, not testing strategy.
@@ -594,7 +602,7 @@ All resolved per workflow step 8. Resolutions captured inline:
 - **Q: Should staging environment be introduced alongside production?** A: Optional. Default is production-only to keep segment 12 within its 30-minute budget. OUTLINE author decides.
 - **Q: Should the workshop teach `pnpm` or `yarn` as alternatives?** A: No. Section 4.9 excludes alternative package managers.
 - **Q: Should the workshop include an example of a failing pipeline (red CI) for debugging?** A: Yes, in segment 8 (Caching & Debugging Workflows). Stable doc must include a deliberate failure step + recovery in its Live build.
-- **Q: Should we pin Node.js version, and where?** A: Yes — pin in `package.json` `engines` and in workflow `setup-node` `node-version`. Use Node LTS at workshop date. Mentioned in stage docs at the relevant Live build step.
+- **Q: Should we pin Node.js version, and where?** A: Yes — pin to a specific minor (currently `22.22`). `lts/*` resolves at workflow-run time and produces non-deterministic builds across workshop dates, which would silently invalidate pre-staged repos and recorded demos. Pin in both `package.json` `engines.node` (as `>=22.22.0`, see §4.2) and in workflow `setup-node` `node-version` (as `22.22`). Mentioned in stage docs at the relevant Live build step.
 
 ## 12. Acceptance Criteria for the Instructor Docs
 

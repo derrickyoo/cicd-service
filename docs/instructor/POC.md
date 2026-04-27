@@ -146,7 +146,7 @@ We can read the event and gate steps on it. The workflow is still a single `echo
 
 1. Open `deploy.yml`. Replace the segment-2/3/4 demonstration steps with a real pipeline. Keep `name: Deploy`, `on: push: branches: [main]`, and `runs-on: ubuntu-latest`. The single job is still named `deploy`.
 2. First step: `uses: actions/checkout@v4`. Narrate that this clones the repo into the runner. No `with:` needed for the default behavior.
-3. Second step: `uses: actions/setup-node@v4` with `with: node-version: lts/*` (the `lts/*` alias resolves to whatever Node LTS the workshop date corresponds to; the local install from pre-flight matches `package.json` `engines.node`, TDD §4.2).
+3. Second step: `uses: actions/setup-node@v4` with `with: node-version: 22.22` (pinned to Node 22.22 so the runner matches `package.json` `engines.node` of `>=22.22.0` from pre-flight, TDD §4.2; no surprise version drift between workshop dates).
 4. Third step: `run: npm ci`. Narrate the difference from `npm install`: `npm ci` requires `package-lock.json` and produces a deterministic install — exactly the property CI wants.
 5. Fourth step: `run: npm run build`. The Astro build emits `dist/` (TDD §4.8). Push, watch the run, click into the **Build** step, scroll to where Astro reports `dist/index.html` was written.
 6. Now AWS. In a separate browser tab, open the repo's **Settings → Secrets and variables → Actions**. Create two repository secrets:
@@ -214,7 +214,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 22.22
       - run: npm ci
       - run: npm run build
       - uses: actions/upload-artifact@v4

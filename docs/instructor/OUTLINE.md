@@ -69,11 +69,16 @@ flowchart LR
 
 The instructor verifies every item below before the workshop starts. The recommended cutoff is 30 minutes before segment 1.
 
+### Show-stoppers (verify first)
+
+- [ ] **Workshop repository is PUBLIC.** The workshop reference repo and any student follow-along repos are PUBLIC on GitHub. Verify with `gh repo view <owner>/<repo> --json visibility -q .visibility` — must return `"PUBLIC"`. Why it matters: GitHub Environments + Required Reviewers + Wait Timers (segment 12) are free on public repos but require a paid plan for private repos. The workshop is built to run on the Free plan; a private repo silently breaks segment 12's protection-rules demo.
+- [ ] **`package-lock.json` is committed in the sample-app repo.** The sample app's `package-lock.json` is committed alongside `package.json`. Verify with `git ls-files | grep package-lock.json` in the sample-app's repo — must return the file. Why it matters: `npm ci` (segment 5 onward) and `setup-node` with `cache: 'npm'` (segment 8) both REQUIRE the lockfile. Without it, segment 5's first build fails before any teaching content lands.
+
 ### Sample app
 
 - [ ] The sample app builds locally with `npm install && npm run build` and produces a non-empty `dist/index.html`. Spec: TDD §4.
 - [ ] The sample app is committed to a clean GitHub repository on `main` only. No prior `.github/workflows/` content. The instructor will commit `deploy.yml` live in segment 2.
-- [ ] Node LTS is installed locally and the version matches the `package.json` `engines.node` field. The version is also what `setup-node` will pin in workflow examples.
+- [ ] Node 22.22 is installed locally and matches the `package.json` `engines.node` value (`>=22.22.0`); this is the version `setup-node` pins in every workflow example.
 
 ### AWS
 
