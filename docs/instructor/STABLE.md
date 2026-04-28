@@ -20,7 +20,7 @@ Stable stage, FEM segments 8–11. Time block: 12:45 to 3:00. By the end of segm
 
 ## Completed reference
 
-The end-of-Stable state described in this document — the `build-astro` composite action (lines 143–186), the `_build.yml` reusable workflow (lines 259–299), the `ci.yml` PR-validation workflow (lines 307–320), and the modified `deploy.yml` that consumes `_build.yml` with caching (lines 326–353) — lives on the `stable` branch of this repository.
+The end-of-Stable state described in this document — the `build-astro` composite action (segment 9, step 2), the `_build.yml` reusable workflow (segment 10, step 1), the `ci.yml` PR-validation workflow (segment 10, step 2), and the modified `deploy.yml` that consumes `_build.yml` with caching (segment 10, step 3) — lives on the `stable` branch of this repository.
 
 The branch progression is linear: `stable` is branched from `poc`, so `git diff stable..poc` shows exactly what segments 8–11 add on top of the POC end-state. See the per-branch `README.md` on the `stable` branch for branch-protection rule configuration and the `ACTIONS_STEP_DEBUG` demo setup used in segment 8.
 
@@ -126,7 +126,7 @@ End state at the close of segment 8: `deploy.yml` has caching enabled via `setup
 
 ### Transition
 
-Caching shrinks the install step but does not address the duplication problem. The `build` job in `deploy.yml` has five lines that any future workflow in this repo will copy verbatim: checkout, setup-node, install, build, upload-artifact. Segment 9 introduces the marketplace and the first reuse mechanism — a composite action — to extract that sequence into one place.
+Caching shrinks the install step but does not address the duplication problem. The `build` job in `deploy.yml` has five lines that any future workflow in this repo will copy verbatim: checkout, setup-node, install, build, upload-artifact. The composite will absorb four of these five — checkout stays per-caller because local actions cannot bootstrap their own checkout. Segment 9 introduces the marketplace and the first reuse mechanism — a composite action — to extract that sequence into one place.
 
 ---
 
@@ -139,6 +139,7 @@ Caching shrinks the install step but does not address the duplication problem. T
 - For Stable, every marketplace action stays pinned to its **major version tag** (`@v4`, not `@<sha>`). Major-tag pinning is the right level for a workshop and a reasonable default for collaborative projects: you accept that the publisher can re-point the tag, in exchange for getting security patches without manual intervention. SHA-pinning is an Enterprise-stage concern (segment 14, OWASP CICD-SEC-3) and we deliberately defer it.
 - A **composite action** is a way to package a sequence of steps under a single `uses:` reference. It lives in your repo at `.github/actions/<name>/action.yml`. It can have inputs and outputs. It cannot have its own `runs-on:` because it executes inside the calling job's runner. The mental model is "an inlined macro that runs on the caller's machine, not a separately-scheduled job."
 - Composite actions are the right reuse mechanism when the unit you are reusing is a **step sequence** within a single job. They are the wrong mechanism when the unit is a whole job with its own runner; that is what reusable workflows are for (segment 10).
+- A local composite action cannot self-bootstrap — the runner needs the action's `action.yml` on disk before it can be parsed, which means the calling job must run `actions/checkout` BEFORE invoking the composite. The composite itself doesn't include a checkout step.
 
 ### Live build
 
@@ -150,11 +151,11 @@ Starting point: the segment-8 end-state of `deploy.yml`, with caching via `setup
 
 ```yaml
 # .github/actions/build-astro/action.yml — Stable stage, segment 9
-# Composite action: checkout, setup Node, install with cache, build Astro, upload dist/.
+# Composite action: setup Node, install with cache, build Astro, upload dist/.
 # Consumed by deploy.yml in segment 9 and by ci.yml + _build.yml in segment 10.
 
 name: Build Astro
-description: Checkout, install dependencies with npm cache, build the Astro static site, and upload the dist artifact.
+description: Install dependencies with npm cache, build the Astro static site, and upload the dist artifact.
 
 inputs:
   node-version:
@@ -169,9 +170,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-
     - name: Setup Node
       uses: actions/setup-node@v4
       with:
@@ -198,7 +196,7 @@ Walk the file. Three callouts to make:
 - `shell: bash` — required on every `run:` step in a composite action. The runner does not infer it. Forgetting it is the most common composite-action error.
 - `inputs:` are referenced inside the file as `${{ inputs.<name> }}`. They become `with:` keys when the action is consumed.
 
-**Step 3 — Replace the inline steps in `deploy.yml`'s `build` job.** Show the diff. The five inline steps become a single `uses:` call to the local composite action.
+**Step 3 — Replace the inline build steps in `deploy.yml`'s `build` job.** Show the diff. The four post-checkout inline steps (setup-node, install, build, upload-artifact) become a single `uses:` call to the local composite action; the `actions/checkout@v4` step stays in the calling job.
 
 ```diff
 # .github/workflows/deploy.yml — Stable stage, segment 9 step 3
@@ -206,8 +204,8 @@ Walk the file. Three callouts to make:
    build:
      runs-on: ubuntu-latest
      steps:
--      - name: Checkout
--        uses: actions/checkout@v4
+       - name: Checkout
+         uses: actions/checkout@v4
 -      - name: Setup Node
 -        uses: actions/setup-node@v4
 -        with:
@@ -228,7 +226,7 @@ Walk the file. Three callouts to make:
 
 Two notes worth pausing on:
 - The `uses:` value is a path starting with `./`. That is the syntax for a local composite action. Marketplace and remote-repo references are `<owner>/<repo>@<ref>`; local references are paths. Forget the `./` and you get a confusing "could not find action" error.
-- The `actions/checkout@v4` step is now inside the composite. The job's first observable step is the composite itself. If a student types `uses: ./.github/actions/build-astro` *before* `actions/checkout@v4`, they will get an error: a local composite cannot be resolved before the repository is checked out. The composite must self-checkout (which this one does), or the caller must check out before calling it. We chose self-checkout — the call site is one line.
+- The build job's first step is `actions/checkout@v4`; the composite is invoked next. Local actions cannot bootstrap their own checkout, so the caller is always responsible for it. If a student types `uses: ./.github/actions/build-astro` *before* `actions/checkout@v4`, they will get an error: a local composite cannot be resolved before the repository is checked out, because the runner needs the composite's `action.yml` on disk before it can be parsed.
 
 **Step 4 — Push, observe, narrate.** Push the change. The Actions run shows the `Build Astro` step expanding into its component steps in the log. The `deploy` job downstream is unchanged — it still consumes the `dist` artifact via `actions/download-artifact@v4`. End state: `deploy.yml` is shorter, all build logic lives in one place, and any future workflow that needs an Astro build calls the same composite.
 
@@ -239,7 +237,7 @@ Two notes worth pausing on:
 - **Q: "Can the composite action check out a different repo?"** Yes — `actions/checkout@v4` accepts a `repository:` input. Doing so is unusual for a build composite; it is more common in deployment composites that fetch infrastructure code from a separate repo.
 - **Q: "What does `uses: ./...` mean exactly?"** It means "the composite action lives in this repository, at this path, on the same ref the workflow is running from." There is no version pinning because there is no version — the composite ships with the workflow.
 - **Gotcha — forgetting `shell:` on `run:` steps.** In a regular workflow `run:` defaults to `bash` on Linux runners. In a composite, it does not. Every `run:` step inside `runs:` must declare `shell:` explicitly. The error if you forget it is a validation failure on workflow load.
-- **Gotcha — the composite tries to use a tool that wasn't installed yet.** The composite owns its own `setup-node` step. If a student factors out only `npm ci && npm run build` into the composite and leaves `setup-node` in the calling job, the order of steps becomes load-bearing. The robust pattern is the one we used: the composite carries everything it needs, including checkout and toolchain.
+- **Gotcha — the composite tries to use a tool that wasn't installed yet.** The composite owns its own `setup-node` step. If a student factors out only `npm ci && npm run build` into the composite and leaves `setup-node` in the calling job, the order of steps becomes load-bearing. The robust pattern is the one we used: the composite carries everything it needs from setup-node onward. Checkout is the one exception — it has to live in the calling job because the runner cannot read the composite's `action.yml` until after checkout has run.
 - **Gotcha — copying the composite to another repo expecting it to "just work."** A composite at `./.github/actions/build-astro` is local-only. To share across repos, it must be either (a) published as its own repo and consumed via `<owner>/<repo>/.github/actions/build-astro@<ref>`, or (b) re-implemented as a reusable workflow that the other repo calls via `workflow_call`. Reuse across repos is not free.
 
 ### Transition
@@ -262,7 +260,7 @@ The composite action gives us a single source of truth for the *step sequence*. 
 
 Starting point: segment-9 end-state. `deploy.yml` consumes the composite at `./.github/actions/build-astro`. There is no `ci.yml` yet.
 
-**Step 1 — Extract the build job into `_build.yml`.** Create `.github/workflows/_build.yml`. The reusable workflow has one job, `build`, whose body is the same composite-action call we already factored out. It exposes one output, `artifact-name`, so callers know what artifact to download.
+**Step 1 — Extract the build job into `_build.yml`.** Create `.github/workflows/_build.yml`. The reusable workflow has one job, `build`, which checks out the repository and then delegates to the same composite-action call we already factored out. It exposes one output, `artifact-name`, so callers know what artifact to download. The job has to do its own checkout because local composites cannot be parsed until their `action.yml` is on disk — the same constraint we hit in segment 9.
 
 ```yaml
 # .github/workflows/_build.yml — Stable stage, segment 10
@@ -295,6 +293,9 @@ jobs:
     outputs:
       artifact-name: ${{ steps.echo.outputs.name }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Build Astro
         uses: ./.github/actions/build-astro
         with:
@@ -438,7 +439,7 @@ No new code. This segment is the comparison and the end-of-stage recap. The inst
 
 **Where each one lives in this workshop's pipeline:**
 
-- **Composite (`.github/actions/build-astro/action.yml`):** owns the checkout → setup-node → install → build → upload-artifact sequence. Reused by the reusable workflow.
+- **Composite (`.github/actions/build-astro/action.yml`):** owns the setup-node → install → build → upload-artifact sequence (checkout stays in the calling job). Reused by the reusable workflow.
 - **Reusable workflow (`.github/workflows/_build.yml`):** owns the `build` job. Called by `ci.yml` (PR validation) and by `deploy.yml` (push-to-main deploy).
 - **Custom action:** not used in this workshop. We discuss it because the room will encounter custom actions written by others — `actions/checkout` itself is a JavaScript custom action — and because students need to know there is a category beyond YAML when their problem outgrows step sequences.
 

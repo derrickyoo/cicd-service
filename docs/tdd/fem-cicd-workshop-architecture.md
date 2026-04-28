@@ -243,7 +243,7 @@ These are intentional. POC's role is to be the "before" picture against which St
 - `deploy.yml` triggers on `push: branches: [main]` and reuses the build logic.
 - Caching: `actions/cache` for `~/.npm` keyed on `package-lock.json` hash. (`actions/setup-node` with `cache: 'npm'` is the recommended idiomatic form — instructor demonstrates both.)
 - Marketplace actions used: `actions/checkout@v4`, `actions/setup-node@v4`, `actions/upload-artifact@v4`, `actions/download-artifact@v4`, `aws-actions/configure-aws-credentials@v4`. Pinned to major version tags (not SHAs) at this stage.
-- Composite action extracted: `.github/actions/build-astro/action.yml` wraps the checkout → setup-node → install → build sequence. Reused by both `ci.yml` and `deploy.yml`.
+- Composite action extracted: `.github/actions/build-astro/action.yml` wraps the setup-node → install → build → upload-artifact sequence. The calling job runs `actions/checkout@v4` before invoking the composite (local actions cannot bootstrap their own checkout). Reused by both `ci.yml` and `deploy.yml`.
 - Reusable workflow extracted: `.github/workflows/_build.yml` with `on: workflow_call`. Demonstrated as an alternative to the composite action; the segment-11 conversation explicitly compares them.
 
 **AWS topology:**
