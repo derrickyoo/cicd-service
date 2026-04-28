@@ -78,6 +78,18 @@ Learn to set up large-scale systems with GitOps and optimized CI/CD workflows. S
 
 ---
 
+## Introduction to Backend Architectures
+
+Explore the fundamentals of backend architectures, from monoliths to microservices and serverless setups. Learn when to use each design, how to tackle common challenges, and pick up key principles to make your systems robust and scalable.
+
+---
+
+## Cloud Infrastructure: Startup to Scale
+
+Manage and automate container deployment to AWS. Take applications from a single laptop to a production cluster with infrastructure-as-code, CI/CD pipelines, and orchestration.
+
+---
+
 # Course Introduction
 
 ![welcome](https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExY21yOTZrcHhtcHZzdm40ZjZvc2Eyczd4N3BrZWFkbTUxcGliNGJuNiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/ASd0Ukj0y3qMM/giphy.gif)
@@ -201,12 +213,7 @@ Learn to set up large-scale systems with GitOps and optimized CI/CD workflows. S
 
 ## End-of-POC pipeline
 
-```mermaid
-flowchart LR
-    Push["push to main"] --> Build["build job<br/>checkout + setup-node<br/>npm ci + npm run build<br/>upload-artifact"]
-    Build --> Deploy["deploy job<br/>download-artifact<br/>configure-aws-credentials (IAM key)<br/>aws s3 sync"]
-    Deploy --> S3[("S3 bucket<br/>public-read")]
-```
+![End-of-POC pipeline](./diagrams/end-of-poc.svg)
 
 ---
 
@@ -376,17 +383,7 @@ flowchart LR
 
 ## End-of-Stable pipeline
 
-```mermaid
-flowchart LR
-    PR["pull_request"] --> CI["ci.yml<br/>uses _build.yml"]
-    Push["push: main"] --> Deploy["deploy.yml<br/>build job uses _build.yml<br/>deploy job aws s3 sync"]
-    CI -. required check .-> MainBranch[("main protected")]
-    MainBranch --> Push
-    Deploy --> S3[("S3 bucket<br/>public-read")]
-    CI -.-> Reusable["_build.yml"]
-    Deploy -.-> Reusable
-    Reusable -.-> Composite["build-astro composite"]
-```
+![End-of-Stable pipeline](./diagrams/end-of-stable.svg)
 
 ---
 
@@ -554,19 +551,7 @@ flowchart LR
 
 ## End-of-Enterprise pipeline
 
-```mermaid
-flowchart LR
-    PR["pull_request"] --> CI["ci.yml<br/>SHA-pinned<br/>concurrency: pr-#"]
-    Push["push: main"] --> Deploy["deploy.yml<br/>environment: production<br/>concurrency: prod-deploy<br/>id-token: write"]
-    CI -. required check .-> MainBranch[("main protected")]
-    MainBranch --> Push
-    Deploy --> OIDC{{"OIDC token exchange<br/>sts:AssumeRoleWithWebIdentity"}}
-    OIDC --> Role["IAM Role<br/>least-privilege"]
-    Role --> S3[("S3 (private)")]
-    Role --> CF[("CloudFront<br/>OAC + invalidation")]
-    S3 --> CF
-    CF --> Users(("End users"))
-```
+![End-of-Enterprise pipeline](./diagrams/end-of-enterprise.svg)
 
 ---
 
