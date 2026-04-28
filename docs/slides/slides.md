@@ -18,7 +18,7 @@ section {
 
 # Cloud CI/CD with GitHub Actions
 
-Build CI/CD pipelines for a real frontend, three stages of maturity.
+Build, test, and ship with *confidence*.
 
 ---
 
@@ -42,16 +42,18 @@ Build CI/CD pipelines for a real frontend, three stages of maturity.
 - Started with frontend (2+ years)
 - Followed curiosity to backend (2+ years)
 - Continued curiosity to fullstack (2+ years)
-- Found passion in DevOps & Platform Engineering (4+ years - current)
+- Found passion in DevOps & Platform Engineering (5+ years - current)
 
 ---
 
 ## I build things on the internet
 
-- Twitch: https://www.twitch.tv/thealtf4stream
-- YouTube: https://www.youtube.com/thealtf4stream
-- Twitter: https://www.x.com/thealtf4stream
 - Blog: https://altf4.blog
+- Github: https://github.com/ALT-F4-LLC
+- Twitch: https://www.twitch.tv/thealtf4stream
+- Twitter: https://www.x.com/thealtf4stream
+- YouTube: https://www.youtube.com/thealtf4stream
+- Vorpal: https://docs.vorpal.build
 
 ---
 
@@ -60,7 +62,7 @@ Build CI/CD pipelines for a real frontend, three stages of maturity.
 - Introduction to DevOps for Developers
 - Enterprise Cloud Infrastructure
 - Introduction to Backend Architectures
-- Fullstack Deployment: From Containers to Production AWS
+- Cloud Infrastructure: Startup to Scale
 
 ---
 
@@ -72,7 +74,7 @@ Take your first steps into DevOps guided from the perspective of a developer! Im
 
 ## Enterprise Cloud Infrastructure
 
-Learn to set up large-scale systems with GitOps and optimized CI/CD workflows. And see strategies to standardize your organization's approach to AWS resource management and dynamic cloud orchestration.
+Learn to set up large-scale systems with GitOps and optimized CI/CD workflows. See strategies to standardize your organization's approach to cloud resource management and dynamic orchestration.
 
 ---
 
@@ -84,7 +86,7 @@ Learn to set up large-scale systems with GitOps and optimized CI/CD workflows. A
 
 ## Goals in this course
 
-- Ship a frontend with GitHub Actions
+- Ship a "simple" frontend with GitHub Actions
 - Recognize three stages of CI/CD maturity
 - Know when to escalate from "it works" to "it's safe"
 - Build a pipeline you'd be okay handing to a security review
@@ -93,25 +95,21 @@ Learn to set up large-scale systems with GitOps and optimized CI/CD workflows. A
 
 ## Pre-requisites for this course
 
-- A GitHub account (Free plan is fine)
-- Basic Astro / Node.js familiarity
+- GitHub account (free plan is fine)
 - AWS account on the free tier with admin access
-- A public repo prepared for the workshop
-- Node 22.22 installed locally
+- Node (v22) installed locally
 
 ---
 
-## How this workshop runs
+## Reference repository
 
-- The slides set up the WHY
-- The terminal does ALL the code
-- You can follow along live, or read the branches later
+- https://github.com/ALT-F4-LLC/fem-cicd-service
 
 ---
 
 ## Reference branches
 
-- POC end state -> `git checkout poc`
+- Proof-of-concept end state -> `git checkout poc`
 - Stable end state -> `git checkout stable`
 - Enterprise end state -> `git checkout enterprise`
 
@@ -119,7 +117,7 @@ Learn to set up large-scale systems with GitOps and optimized CI/CD workflows. A
 
 ## Working branch
 
-- Workshop -> `git checkout feature/initial-implementation`
+- Workshop -> `git checkout feature/main` (use `main` in your repo)
 
 ---
 
@@ -131,23 +129,23 @@ Learn to set up large-scale systems with GitOps and optimized CI/CD workflows. A
 
 ## Three Stages
 
-- POC — "Just get it deploying!"
-- Stable — "Make it safe to collaborate!"
-- Enterprise — "Make it safe to operate!"
+- Proof-of-concept - "Just get it deployed!"
+- Stable - "Make it safe to collaborate!"
+- Enterprise - "Make it safe to operate!"
 
 ---
 
 ## Same artifact, three pipelines
 
-- One trivial Astro `dist/` rides three increasingly mature pipelines
+- One trivial `dist/` evolves with three increasingly mature pipelines
 - The diff between pipelines IS the workshop
-- By 4:30 you can articulate which pipeline fits which moment
+- By the end, you can articulate which pipeline fits which moment
 
 ---
 
-## POC
+## Proof-of-concept
 
-> "Just get it deploying!"
+> "Just get it deployed!"
 
 ---
 
@@ -163,32 +161,22 @@ Learn to set up large-scale systems with GitOps and optimized CI/CD workflows. A
 
 ---
 
-## The day shape
+# Stage 1 - Proof-of-concept
 
-- Morning: POC (segments 2-6)
-- Lunch (segment 7)
-- Early afternoon: Stable (segments 8-11)
-- Late afternoon: Enterprise (segments 12-15)
-- Wrap-up at 4:30
+![chaos](https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExemI5OG56MHVqZ3NmaGpyanFpajN5eWpsd2RxY2h6dWhwazExNDJxNCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/1rNWZu4QQqCUaq434T/giphy.gif)
 
 ---
 
-# Stage 1 — POC
+## Proof-of-concept
 
-![chaos](https://media.giphy.com/media/13HgwGsXF0aiGY/giphy.gif)
-
----
-
-## POC
-
-> "Just get it deploying!"
+> "Just get it deployed!"
 
 ---
 
 ## Phase Scenario
 
 - We have working source code
-- We need bytes in front of a user this week
+- We need a solution in front of a user this week
 - We are willing to do the wrong thing on purpose
 - We will name what's wrong as we go
 
@@ -197,7 +185,7 @@ Learn to set up large-scale systems with GitOps and optimized CI/CD workflows. A
 ## Phase Goals
 
 - One workflow file in the repo
-- Build the Astro site in CI
+- Build the frontend in CI
 - Ship `dist/` to S3 on push to `main`
 
 ---
@@ -222,11 +210,7 @@ flowchart LR
 
 ---
 
-## Start building!
-
----
-
-## Segment 2 — Your First Workflow
+## Your First Workflow
 
 - Workflows are YAML in `.github/workflows/`
 - No separate CI server to configure
@@ -235,51 +219,43 @@ flowchart LR
 
 ---
 
-## Why segment 2 stays tiny
-
-- Names land in segments 3 and 4
-- Indentation errors are the #1 reason workflows "don't run"
-- If GitHub doesn't see the file, suspect YAML before suspecting GitHub
-
----
-
-## Segment 3 — Triggers & Runners
+## Triggers & Runners
 
 - `on:` is WHEN
 - `runs-on:` is WHERE
-- Each job runs on a fresh VM — no shared state between jobs
+- Each job runs on a fresh VM - no shared state between jobs
 - Self-hosted exists; we revisit in segment 15
 
 ---
 
 ## Triggers we actually use
 
-- `push: branches: [main]` — narrowed from "any push"
-- `workflow_dispatch` — the manual button
-- `pull_request` — coming in Stable
+- `push: branches: [main]` - narrowed from "any push"
+- `workflow_dispatch` - the manual button
+- `pull_request` - coming in Stable
 - Everything else: read the docs when you need it
 
 ---
 
-## Segment 4 — Contexts & Expressions
+## Contexts & Expressions
 
 - `${{ ... }}` is the only place YAML has logic
 - Read who triggered the run, on what ref, from what event
 - Gate steps with `if:`
-- If you need real logic, write a script — not more `${{ }}`
+- If you need real logic, write a script - not more `${{ }}`
 
 ---
 
 ## The contexts that matter today
 
-- `github` — actor, ref, event_name, sha
-- `runner` — OS, temp dir
-- `secrets` — encrypted values (NOT readable in `if:`)
-- `vars` — repo-level variables (readable everywhere)
+- `github` - actor, ref, event_name, sha
+- `runner` - OS, temp dir
+- `secrets` - encrypted values (NOT readable in `if:`)
+- `vars` - repo-level variables (readable everywhere)
 
 ---
 
-## Segment 5 — Building a CI Pipeline
+## Building a CI Pipeline
 
 - Three steps every Node project needs: checkout, setup-node, install + build
 - Then add AWS credentials and `aws s3 sync`
@@ -291,22 +267,20 @@ flowchart LR
 
 - IAM user access key pasted into repo secrets
 - Anyone with write access to the repo can exfiltrate it
-- The screenshare recording is permanent
-- Enterprise (segment 13) fixes this — make the wrong way concrete first
 
 ---
 
 ## NO LONG-LIVED CREDENTIALS
 
 > Long-lived AWS keys in repo secrets is the original sin of CI/CD.
-> We're committing it on stage so the OIDC payoff lands later.
+> We're committing it now so the OIDC payoff lands later.
 
 ---
 
-## Segment 6 — Job Dependencies & Artifacts
+## Job Dependencies & Artifacts
 
 - Real pipelines split build from deploy
-- Each job runs on a fresh runner — no shared filesystem
+- Each job runs on a fresh runner - no shared filesystem
 - `upload-artifact` / `download-artifact` move the bytes
 - `needs:` declares the ordering
 
@@ -321,12 +295,16 @@ flowchart LR
 
 ---
 
+## Start building!
+
+---
+
 ## End-of-POC recap
 
 - Push to `main` builds and deploys to S3
 - Two jobs, one artifact, one workflow file
 - Long-lived credentials, no review, no caching, no concurrency
-- We named the four problems Stable will solve
+- We named the problems STABLE will solve
 
 ---
 
@@ -341,7 +319,7 @@ flowchart LR
 
 ## Phase Pros
 
-- Push and ship — a developer can read it
+- Push and ship, a developer can read it
 - One workflow file is auditable end-to-end
 - Zero infrastructure beyond a bucket
 - Fastest path to "users see the site"
@@ -351,27 +329,27 @@ flowchart LR
 ## Phase Cons
 
 - Long-lived AWS keys in repo secrets
-- No review — every push deploys
-- No caching — install every run
-- No concurrency — last writer wins, non-deterministically
+- No review, every push deploys
+- No caching, install every run
+- No concurrency, last writer wins, non-deterministically
 
 ---
 
-# Stage 2 — Stable
+# Stage 2 - Stable
 
-![calm](https://media.giphy.com/media/l4FGuhL4U2pJgLp32/giphy.gif)
+![calm](https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExNTVnaHZhbXc5bzRkYjU5dGVmaGViM3RrZzNiemVtNmR6Ync3MGZ3cCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/bMZ6gD0HaCCR2/giphy.gif)
 
 ---
 
 ## Stable
 
-> "Make it safe to collaborate!"
+> "Make it safe to build!"
 
 ---
 
 ## Phase Scenario
 
-- POC is shipping
+- Proof-of-concept is shipping
 - Now multiple people want to commit
 - We need a PR gate before code reaches `main`
 - We need workflow code we are not embarrassed to read
@@ -412,15 +390,11 @@ flowchart LR
 
 ---
 
-## Start building!
-
----
-
-## Segment 8 — Caching & Debugging
+## Caching & Debugging
 
 - Cache is the highest-leverage change you can make
-- `setup-node` with `cache: 'npm'` — short and hard to misconfigure
-- `actions/cache` — when you need something setup-node doesn't know about
+- `setup-node` with `cache: 'npm', short and hard to misconfigure
+- `actions/cache` - when you need something setup-node doesn't know about
 - `ACTIONS_STEP_DEBUG=true` is the equivalent of `set -x`
 
 ---
@@ -428,13 +402,13 @@ flowchart LR
 ## Yes, this fails on purpose
 
 - We will deliberately mistype the cache key
-- CI goes red — we read the log
+- CI goes red, we read the log
 - A red CI is the signal the pipeline exists for, not a problem to hide
 - Recognize the failure pattern when you meet it for real
 
 ---
 
-## Segment 9 — Marketplace & Composite Actions
+## Marketplace & Composite Actions
 
 - Marketplace is a directory, not a registry
 - Treat actions like third-party deps
@@ -445,10 +419,10 @@ flowchart LR
 
 ## Reading a marketplace action
 
-- Publisher — first-party (`actions/`, `aws-actions/`) or community
-- Release cadence — three years quiet is a risk
-- Star count — not quality, but blast radius
-- Security advisories tab — has it been audited
+- Publisher: first-party (`actions/`, `aws-actions/`) or community
+- Release cadence: three years quiet is a risk
+- Star count: not quality, but blast radius
+- Security advisories tab: has it been audited
 
 ---
 
@@ -457,11 +431,11 @@ flowchart LR
 - setup-node + install + build + upload-artifact = one logical unit
 - Future workflows in this repo will call the same composite
 - Local composites can't bootstrap their own checkout
-- Checkout stays in the calling job — every time
+- Checkout stays in the calling job - every time
 
 ---
 
-## Segment 10 — Reusable Workflows
+## Reusable Workflows
 
 - A reusable workflow wraps a whole job (or jobs)
 - Triggered by `on: workflow_call`
@@ -479,7 +453,7 @@ flowchart LR
 
 ---
 
-## Segment 11 — Composite vs. Reusable vs. Custom
+## Composite vs. Reusable vs. Custom
 
 - Step sequence in one job? Composite.
 - Whole job, possibly across repos? Reusable workflow.
@@ -494,6 +468,10 @@ flowchart LR
 - Logs appear inline in the calling job
 - Zero runtime overhead
 - Reach for reusable when the unit is GENUINELY a job
+
+---
+
+## Start building!
 
 ---
 
@@ -528,15 +506,15 @@ flowchart LR
 ## Phase Cons
 
 - Long-lived AWS keys still in repo secrets
-- Deploys still automatic on merge — no human gate
+- Deploys still automatic on merge, no human gate
 - Actions pinned to mutable major-version tags
 - S3 bucket still public-read, no CDN
 
 ---
 
-# Stage 3 — Enterprise
+# Stage 3 - Enterprise
 
-![serious](https://media.giphy.com/media/3o7TKDEq4bUZbFNVjW/giphy.gif)
+![serious](https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExemdmaDc3b3NkeDhldWFjOTNrOGV4bjZwN3N1MXk3cmw1bXZyc2o1diZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/NTur7XlVDUdqM/giphy.gif)
 
 ---
 
@@ -550,7 +528,7 @@ flowchart LR
 
 - The pipeline works and the team trusts it
 - Now a security review is on the calendar
-- Long-lived keys, public buckets, mutable tags — all findings
+- Long-lived keys, public buckets, mutable tags - all findings
 - We have to make the pipeline reviewable
 
 ---
@@ -592,24 +570,18 @@ flowchart LR
 
 ---
 
-## Start building!
-
----
-
-## Segment 12 — Environments & Protection Rules
+## Environments & Protection Rules
 
 - An environment is a named bundle of rules and secrets
-- Required reviewers — pause until a human approves
-- Wait timer — the "are you SURE?" guardrail
+- Required reviewers, pause until a human approves
+- Wait timer, the "are you SURE?" guardrail
 - Free for public repos; paid plan for private
 
 ---
 
 ## Five seconds of dead air
 
-> 30 minutes of count-down on stage = unwatchable.
-> 1 minute = teachable.
-> The wait timer is not a queue — it's a brake.
+> The wait timer is not a queue - it's a brake.
 
 ---
 
@@ -617,12 +589,10 @@ flowchart LR
 
 - The `production` environment is the principal
 - The OIDC trust policy will bind to that principal
-- Segment 12 establishes the binding target
-- Segment 13 wires up the binding
 
 ---
 
-## Segment 13 — OIDC & Cloud Authorization
+## OIDC & Cloud Authorization
 
 - Short-lived credentials minted at runtime
 - The keys never sat in GitHub
@@ -640,7 +610,7 @@ flowchart LR
 
 ---
 
-## NO LONG-LIVED CREDENTIALS — FINALLY GONE
+## NO LONG-LIVED CREDENTIALS - FINALLY GONE
 
 > The `AWS_ACCESS_KEY_ID` secret is deleted on stage.
 > The `AWS_SECRET_ACCESS_KEY` secret is deleted on stage.
@@ -657,19 +627,12 @@ flowchart LR
 
 ---
 
-## OWASP CICD-SEC closed in segment 13
-
-- CICD-SEC-2 — Insufficient flow control mechanisms
-- CICD-SEC-6 — Insufficient credential hygiene
-
----
-
-## Segment 14 — Hardening Your Workflows
+## Hardening Your Workflows
 
 - SHA-pinning freezes the action at the code we reviewed
 - Deny-all permissions is auditable
 - A reader of the workflow can answer "what can this do?" without GitHub's defaults table
-- Mechanical work — every `uses:` re-pinned with a comment
+- Mechanical work - every `uses:` re-pinned with a comment
 
 ---
 
@@ -700,19 +663,12 @@ flowchart LR
 
 ---
 
-## OWASP CICD-SEC closed in segment 14
-
-- CICD-SEC-1 — Insufficient identity & access management
-- CICD-SEC-3 — Third-party action integrity
-
----
-
-## Segment 15 — Concurrency & Self-Hosted Runners
+## Concurrency & Self-Hosted Runners
 
 - Concurrency groups serialize where order matters
 - Concurrency groups parallelize where it doesn't
-- PR validation — cancel superseded runs
-- Production deploys — queue, never cancel
+- PR validation - cancel superseded runs
+- Production deploys - queue, never cancel
 
 ---
 
@@ -725,12 +681,7 @@ flowchart LR
 
 ---
 
-## Self-hosted runners — discussion only
-
-- Capability mentioned, never demoed live
-- Three legitimate reasons: VPC-internal, licensed tooling, very large jobs
-- Three operational concerns: patching, autoscaling, credential exposure
-- Office hours / FEM platform comments for more
+## Start building!
 
 ---
 
@@ -783,9 +734,8 @@ flowchart LR
 ## What did we do?
 
 - Shipped the same `dist/` artifact through three pipelines
-- Watched a workflow grow from `echo` to OIDC + CloudFront
+- Watched a workflow grow from simple to OIDC + CloudFront
 - Named what was wrong at every stage before fixing it
-- Closed four OWASP CICD Top 10 findings on stage
 
 ---
 
@@ -800,18 +750,10 @@ flowchart LR
 
 ## Three-stage progression
 
-- POC — push and ship, do the wrong thing knowingly
-- Stable — PR-gated, cached, DRY, branch-protected
-- Enterprise — OIDC, environments, SHAs, concurrency, CDN
+- Proof-of-concept: push and ship, do the wrong thing knowingly
+- Stable: PR-gated, cached, DRY, branch-protected
+- Enterprise: OIDC, environments, SHAs, concurrency, CDN
 
----
-
-## OWASP CICD Top 10 closed today
-
-- CICD-SEC-1 — Insufficient identity & access management
-- CICD-SEC-2 — Insufficient flow control
-- CICD-SEC-3 — Third-party action integrity
-- CICD-SEC-6 — Insufficient credential hygiene
 
 ---
 
@@ -821,9 +763,10 @@ flowchart LR
 
 ## I build things on the internet
 
-- Github (personal): https://github.com/erikreinert
-- Github (company): https://github.com/ALT-F4-LLC
-- Twitch: https://www.twitch.tv/thealtf4stream
-- YouTube: https://www.youtube.com/thealtf4stream
-- Twitter: https://www.x.com/thealtf4stream
 - Blog: https://altf4.blog
+- Github (company): https://github.com/ALT-F4-LLC
+- Github (personal): https://github.com/erikreinert
+- Twitch: https://www.twitch.tv/thealtf4stream
+- Twitter: https://www.x.com/thealtf4stream
+- YouTube: https://www.youtube.com/thealtf4stream
+- Vorpal: https://docs.vorpal.build
